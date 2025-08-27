@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { intent, answers = {}, currentStep, action } = req.body;
   
   if (!process.env.GEMINI_API_KEY) {
-    return res.status(500).json({ error: 'Gemini API key not configured' });
+    return res.status(500).json({ error: 'GEMINI_API_KEY environment variable not configured' });
   }
 
   try {
@@ -88,7 +88,7 @@ Generate the next most relevant question to improve this AI prompt.`;
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-goog-api-key': process.env.GEMINI_API_KEY
+            'X-goog-api-key': process.env.GEMINI_API_KEY!
           },
           body: JSON.stringify(geminiRequest)
         }
@@ -157,7 +157,7 @@ Create a comprehensive, structured AI prompt that incorporates all this informat
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-goog-api-key': process.env.GEMINI_API_KEY
+            'X-goog-api-key': process.env.GEMINI_API_KEY!
           },
           body: JSON.stringify(geminiRequest)
         }

@@ -61,35 +61,58 @@ export default function Home() {
     setError('')
     
     try {
-      const systemPrompt = `You are an expert prompt engineer helping users build comprehensive AI prompts. Based on the user's intent and previous answers, generate the next most relevant question that will improve the final prompt.
+      const systemPrompt = `You are an elite prompt engineering specialist with deep expertise across all domains. Your mission is to craft sophisticated, domain-specific questions that will elevate the user's prompt to professional standards.
 
-IMPORTANT: Respond with ONLY a valid JSON object in this exact format:
+CRITICAL REQUIREMENTS:
+1. Generate questions that are HIGHLY SPECIFIC to the user's domain and intent
+2. Each question must be COMPETITIVE-GRADE - the kind that separates amateur from professional prompts
+3. Focus on advanced, nuanced aspects that most people overlook
+4. Questions should reveal deep understanding of the subject matter
+5. Prioritize questions that will make the final prompt significantly more effective
+
+RESPONSE FORMAT - ONLY valid JSON:
 {
   "question": {
-    "text": "Clear, specific question text",
+    "text": "Sophisticated, domain-specific question that demonstrates expertise",
     "type": "text|textarea|select",
-    "options": ["option1", "option2", "option3"] (only if type is "select"),
-    "required": true|false
+    "options": ["expert-level option 1", "advanced option 2", "professional option 3"] (only for select type),
+    "required": true|false,
+    "rationale": "Brief explanation of why this question is crucial for prompt quality"
   }
 }
 
-Guidelines:
-- Ask questions that build upon previous answers
-- Focus on specificity, context, audience, tone, format, constraints
-- Avoid redundant questions
-- Make questions actionable and clear
-- For select type, provide 3-5 relevant options`;
+QUESTION CATEGORIES TO PRIORITIZE:
+- Domain-specific terminology and jargon
+- Professional standards and best practices
+- Advanced constraints and requirements
+- Sophisticated audience considerations
+- Technical specifications and parameters
+- Industry-specific formats and structures
+- Expert-level quality criteria
+- Advanced contextual factors
+
+Make each question feel like it came from a seasoned professional in that specific field.`;
 
       const previousAnswers = Object.entries(answers)
         .map(([q, a]) => `${q}: ${a}`)
         .join('\n');
       
-      const userPrompt = `User Intent: "${intent}"
-Current Step: ${currentStep + 1}/20
-Previous Answers:
+      const userPrompt = `DOMAIN ANALYSIS: "${intent}"
+EXPERTISE LEVEL: Professional/Expert
+CURRENT REFINEMENT STAGE: ${currentStep + 1}/15
+CONTEXT BUILT SO FAR:
 ${previousAnswers}
 
-Generate the next most relevant question to improve this AI prompt.`;
+TASK: Generate the next SOPHISTICATED, DOMAIN-SPECIFIC question that will significantly enhance prompt quality. This question should demonstrate deep expertise in the relevant field and focus on advanced aspects that amateur prompt builders typically miss.
+
+Consider:
+- What would a domain expert ask that others wouldn't?
+- What nuanced details separate good from exceptional results?
+- What professional standards or constraints apply?
+- What advanced techniques or methodologies are relevant?
+- What sophisticated audience considerations matter?
+
+Generate a question that elevates this prompt to professional/expert level.`;
 
       const response = await callGeminiAPI(`${systemPrompt}\n\n${userPrompt}`);
       
@@ -133,30 +156,53 @@ Generate the next most relevant question to improve this AI prompt.`;
     setError('')
     
     try {
-      const systemPrompt = `You are an expert prompt engineer. Create a comprehensive, well-structured AI prompt based on the user's intent and all their answers.
+      const systemPrompt = `You are a master prompt architect with expertise across all professional domains. Your task is to synthesize all gathered information into a sophisticated, production-ready AI prompt that demonstrates expert-level understanding.
 
-IMPORTANT: Respond with ONLY a valid JSON object in this exact format:
+RESPONSE FORMAT - ONLY valid JSON:
 {
-  "finalPrompt": "Complete, professional AI prompt ready to use"
+  "finalPrompt": "Expertly crafted, comprehensive AI prompt",
+  "promptStructure": {
+    "role": "Specific expert role definition",
+    "context": "Detailed situational context",
+    "requirements": "Precise specifications and constraints",
+    "format": "Expected output structure",
+    "quality": "Professional standards and criteria"
+  },
+  "expertiseLevel": "Professional/Expert/Specialist"
 }
 
-Guidelines:
-- Create a clear, actionable prompt that incorporates all context
-- Structure the prompt logically with clear sections if needed
-- Include specific requirements, constraints, and desired outcomes
-- Make it professional and effective for AI systems
-- Ensure the prompt is comprehensive but not overly verbose`;
+PROMPT CRAFTING PRINCIPLES:
+1. ROLE DEFINITION: Establish clear expert persona with relevant credentials
+2. CONTEXT SETTING: Provide comprehensive background and situational awareness
+3. SPECIFIC REQUIREMENTS: Detail exact specifications, constraints, and parameters
+4. OUTPUT FORMAT: Define precise structure, style, and presentation requirements
+5. QUALITY STANDARDS: Set professional benchmarks and success criteria
+6. DOMAIN EXPERTISE: Incorporate field-specific terminology and best practices
+
+Create a prompt that would impress industry professionals and deliver exceptional results.`;
 
       const answersText = Object.entries(answers)
         .map(([q, a]) => `${q}: ${a}`)
         .join('\n');
       
-      const userPrompt = `Original Intent: "${intent}"
+      const userPrompt = `EXPERT PROMPT SYNTHESIS REQUEST
 
-Detailed Requirements:
+PRIMARY OBJECTIVE: "${intent}"
+
+COMPREHENSIVE REQUIREMENTS ANALYSIS:
 ${answersText}
 
-Create a comprehensive, structured AI prompt that incorporates all this information effectively.`;
+SYNTHESIS TASK:
+Transform this information into a masterfully crafted AI prompt that:
+- Demonstrates deep domain expertise
+- Incorporates professional standards and best practices
+- Includes sophisticated constraints and specifications
+- Defines clear quality benchmarks
+- Uses appropriate technical terminology
+- Structures information for optimal AI comprehension
+- Delivers results that would satisfy industry experts
+
+Create a prompt that represents the pinnacle of professional prompt engineering in this domain.`;
 
       const response = await callGeminiAPI(`${systemPrompt}\n\n${userPrompt}`);
       
@@ -165,6 +211,10 @@ Create a comprehensive, structured AI prompt that incorporates all this informat
       if (jsonMatch) {
         const data = JSON.parse(jsonMatch[0]);
         setFinalPrompt(data.finalPrompt)
+        // Store additional metadata if provided
+        if (data.promptStructure) {
+          console.log('Prompt Structure:', data.promptStructure);
+        }
         setIsComplete(true)
         setProgress(100)
       } else {
@@ -399,9 +449,22 @@ Create a comprehensive, structured AI prompt that incorporates all this informat
             </div>
             
             <div className="bg-black/30 backdrop-blur-sm border-2 border-white/20 rounded-xl p-6 mb-6 max-h-96 overflow-y-auto">
-              <div className="prose prose-invert max-w-none">
-                <div className="text-white/90 leading-relaxed whitespace-pre-wrap font-sans">
-                  {finalPrompt}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between border-b border-white/20 pb-3">
+                  <h3 className="text-lg font-semibold text-purple-200">Professional AI Prompt</h3>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-green-300 font-medium">Expert Level</span>
+                  </div>
+                </div>
+                <div className="prose prose-invert max-w-none">
+                  <div className="text-white/95 leading-relaxed whitespace-pre-wrap font-mono text-sm bg-black/20 rounded-lg p-4 border border-white/10">
+                    {finalPrompt}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-xs text-white/60 pt-2 border-t border-white/10">
+                  <span>Generated with advanced prompt engineering</span>
+                  <span>{finalPrompt.length} characters</span>
                 </div>
               </div>
             </div>
