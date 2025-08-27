@@ -1,7 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Enable API routes for development
-  // Remove output: 'export' to allow API routes to work
+  output: 'export',
+  trailingSlash: true,
+  images: {
+    unoptimized: true
+  },
+  // Disable API routes for static export
+  experimental: {
+    appDir: false
+  }
 }
 
 module.exports = nextConfig

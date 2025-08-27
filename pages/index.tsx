@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { saveSession, loadSession } from '../lib/storage'
+import { callGeminiAPI } from '../lib/gemini-client'
 
 interface Question {
   id: string
@@ -60,25 +61,42 @@ export default function Home() {
     setError('')
     
     try {
-      const response = await fetch('/api/gemini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          intent,
-          answers,
-          currentStep,
-          action: 'generateQuestion'
-        })
-      })
+      const systemPrompt = `You are an expert prompt engineer helping users build comprehensive AI prompts. Based on the user's intent and previous answers, generate the next most relevant question that will improve the final prompt.
+
+IMPORTANT: Respond with ONLY a valid JSON object in this exact format:
+{
+  "question": {
+    "text": "Clear, specific question text",
+    "type": "text|textarea|select",
+    "options": ["option1", "option2", "option3"] (only if type is "select"),
+    "required": true|false
+  }
+}
+
+Guidelines:
+- Ask questions that build upon previous answers
+- Focus on specificity, context, audience, tone, format, constraints
+- Avoid redundant questions
+- Make questions actionable and clear
+- For select type, provide 3-5 relevant options`;
+
+      const previousAnswers = Object.entries(answers)
+        .map(([q, a]) => `${q}: ${a}`)
+        .join('\n');
       
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.details || 'Failed to generate question')
-      }
+      const userPrompt = `User Intent: "${intent}"
+Current Step: ${currentStep + 1}/20
+Previous Answers:
+${previousAnswers}
+
+Generate the next most relevant question to improve this AI prompt.`;
+
+      const response = await callGeminiAPI(`${systemPrompt}\n\n${userPrompt}`);
       
-      const data = await response.json()
-      
-      if (data.question) {
+      // Extract JSON from response
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const data = JSON.parse(jsonMatch[0]);
         const question: Question = {
           id: `q${currentStep}`,
           ...data.question
@@ -86,6 +104,8 @@ export default function Home() {
         
         setQuestions(prev => [...prev, question])
         setProgress(Math.min(((currentStep + 1) / maxQuestions) * 80, 80))
+      } else {
+        throw new Error('Invalid response format from Gemini');
       }
     } catch (error) {
       console.error('Error generating question:', error)
@@ -113,27 +133,42 @@ export default function Home() {
     setError('')
     
     try {
-      const response = await fetch('/api/gemini', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          intent,
-          answers,
-          action: 'generateFinalPrompt'
-        })
-      })
+      const systemPrompt = `You are an expert prompt engineer. Create a comprehensive, well-structured AI prompt based on the user's intent and all their answers.
+
+IMPORTANT: Respond with ONLY a valid JSON object in this exact format:
+{
+  "finalPrompt": "Complete, professional AI prompt ready to use"
+}
+
+Guidelines:
+- Create a clear, actionable prompt that incorporates all context
+- Structure the prompt logically with clear sections if needed
+- Include specific requirements, constraints, and desired outcomes
+- Make it professional and effective for AI systems
+- Ensure the prompt is comprehensive but not overly verbose`;
+
+      const answersText = Object.entries(answers)
+        .map(([q, a]) => `${q}: ${a}`)
+        .join('\n');
       
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.details || 'Failed to generate final prompt')
-      }
+      const userPrompt = `Original Intent: "${intent}"
+
+Detailed Requirements:
+${answersText}
+
+Create a comprehensive, structured AI prompt that incorporates all this information effectively.`;
+
+      const response = await callGeminiAPI(`${systemPrompt}\n\n${userPrompt}`);
       
-      const data = await response.json()
-      
-      if (data.finalPrompt) {
+      // Extract JSON from response
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const data = JSON.parse(jsonMatch[0]);
         setFinalPrompt(data.finalPrompt)
         setIsComplete(true)
         setProgress(100)
+      } else {
+        throw new Error('Invalid response format from Gemini');
       }
     } catch (error) {
       console.error('Error generating final prompt:', error)
